@@ -1363,7 +1363,7 @@ private fun Messages(
     val tail = messages.lastOrNull()?.let { it.key to it.contentSize() }
     var seenTail by remember { mutableStateOf(tail) }
     LaunchedEffect(awayFromBottom, tail) { if (!awayFromBottom) seenTail = tail }
-    val newBelow = awayFromBottom && tail != seenTail
+    val newBelow = awayFromBottom && tail != seenTail && !state.running
     // Where the messages that came since the chat was last read begin. It stays put for the rest of this visit,
     // so reading on doesn't move or remove it under the reader; the next visit starts from the new last look.
     // Older pages load first while every loaded message is still new.

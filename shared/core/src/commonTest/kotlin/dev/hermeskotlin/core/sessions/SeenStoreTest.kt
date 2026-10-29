@@ -15,7 +15,8 @@ class SeenStoreTest {
     private val home = GatewayUrl.parse("https://hermes.example.ts.net")
     private var clock = 1_000.0
 
-    private fun session(id: String, at: Double, active: Boolean = false) = SessionSummary(id, lastActive = at, isActive = active)
+    private fun session(id: String, at: Double, active: Boolean = false, unread: Boolean = true) =
+        SessionSummary(id, lastActive = at, isActive = active, unread = unread)
 
     @Test
     fun historyFromBeforeTrackingStartedIsRead() = runTest {
@@ -123,10 +124,12 @@ class SeenStoreTest {
         // A plugin's bridge with a source id of its own is outside too.
         assertFalse(seen.isUnread(from("my-discord-bridge", "bridge", at = 1_100.0)))
         assertNull(seen.readUpTo(from("telegram", "tg", at = 1_100.0)))
-        // Herald's and Desktop's own chats, and rows without a source, still get their replies marked.
-        assertTrue(seen.isUnread(from("desktop", "app", at = 1_100.0)))
-        assertTrue(seen.isUnread(from("cli", "cli", at = 1_100.0)))
-        assertTrue(seen.isUnread(from(null, "legacy", at = 1_100.0)))
+        // Herald's and Desktop's own chats, and rows without a source, get marked unread when gateway flags unread
+        assertTrue(seen.isUnread(from("desktop", "app", at = 1_100.0, unread = true)))
+        assertTrue(seen.isUnread(from("cli", "cli", at = 1_100.0, unread = true)))
+        assertTrue(seen.isUnread(from(null, "legacy", at = 1_100.0, unread = true)))
+        // When read on Desktop (unread = false), they are not unread
+        assertFalse(seen.isUnread(from("desktop", "app", at = 1_100.0, unread = false)))
     }
 
     @Test

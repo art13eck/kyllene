@@ -1756,7 +1756,7 @@ internal fun rowTone(status: RowStatus?, draft: Boolean): RowTone = when {
 internal fun rowStatusLine(status: RowStatus?, draft: Boolean): String? = listOfNotNull(
     status?.waiting?.label,
     "Running".takeIf { status?.running == true },
-    "New reply".takeIf { status?.unread == true },
+    "New reply".takeIf { status?.unread == true && status.running != true },
     "Draft".takeIf { draft },
 ).joinToString(" · ").ifEmpty { null }
 

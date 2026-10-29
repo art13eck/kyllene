@@ -31,13 +31,15 @@ data class SeenChats(
      * gateway keeps it set while the session stays loaded, well after the turn ends.
      *
      * A chat from outside the gateway's clients ([isExternalSource]: Telegram, Discord, a plugin's bridge) is read
-     * where it came in, so as in Hermes Desktop its activity alone doesn't count: only the gateway's read state
-     * ([SessionSummary.unread]) or a turn the user left running here does.
+     * where it came in, so as in Hermes Desktop its activity alone doesn't count.
+     * Furthermore, a chat that was already marked read on the gateway (e.g. read in Desktop) is read here too,
+     * unless a turn was left running on this phone.
      */
     fun isUnread(session: SessionSummary): Boolean {
         val activity = session.activityAt ?: return false
         if (activity <= lastLook(session.id) + SEEN_SLACK_SECONDS) return false
-        return !isExternalSource(session.source) || session.unread || session.id in leftRunning
+        if (!session.unread && session.id !in leftRunning) return false
+        return !isExternalSource(session.source) || session.id in leftRunning
     }
 
     /**

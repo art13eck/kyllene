@@ -1,0 +1,57 @@
+name: Build and Release APK
+
+on:
+  push:
+    branches:
+      - fix/new-reply-sync-and-turn
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: Build APKs
+        run: |
+          ./gradlew --no-daemon :androidApp:assembleRelease :androidApp:assembleDev
+
+      - name: Prepare APKs
+        run: |
+          mkdir -p dist
+          find androidApp/build/outputs/apk -name "*.apk" -exec cp {} dist/ \;
+          ls -la dist/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: herald-fixed-apks
+          path: dist/*.apk
+
+      - name: Create GitHub Release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v0.13.0-patch-$(date +'%Y%m%d-%H%M%S')"
+          gh release create "$tag" dist/*.apk \
+            --title "Herald v0.13.0 with New Reply & Turn fixes" \
+            --notes "Fixes:
+          - Read state sync with Hermes Desktop (respects gateway read state)
+          - No false 'New reply' while turn is running"

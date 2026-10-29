@@ -231,7 +231,9 @@ class SessionsViewModel(
         if (!shown) return@flatMapLatest emptyFlow()
         combine(_state, waiting, seen, running) { state, waiting, seen, running ->
             (state.sessions + state.searchResults.orEmpty() + state.projectSessions.orEmpty()).mapNotNull { session ->
-                RowStatus(waiting[session.id], seen?.isUnread(session) == true, running[session.id] == true)
+                val isRunning = running[session.id] == true
+                val isUnread = !isRunning && seen?.isUnread(session) == true
+                RowStatus(waiting[session.id], isUnread, isRunning)
                     .takeIf { it.needsAttention || it.running }?.let { session.id to it }
             }.toMap()
         }

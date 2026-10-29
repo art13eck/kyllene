@@ -317,9 +317,11 @@ class OtherChatsViewModel(
                 val listed = combine(recentRows, sessions.seen, waiting, running, requestsByChat) { rows, seen, waiting, running, requests ->
                     Listed(
                         rows.map { s ->
+                            val isRunning = running[s.id] == true
+                            val isUnread = !isRunning && seen?.isUnread(s) == true
                             OtherChatRow(
                                 OtherChat(
-                                    s.id, s.displayTitle, waiting[s.id], seen?.isUnread(s) == true, running[s.id] == true, s.activityAt,
+                                    s.id, s.displayTitle, waiting[s.id], isUnread, isRunning, s.activityAt,
                                     requestId = requests[s.id]?.id,
                                 ),
                             )
