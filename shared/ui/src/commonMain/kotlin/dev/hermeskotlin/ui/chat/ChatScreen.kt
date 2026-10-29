@@ -741,6 +741,7 @@ internal fun ChatView(
                                 reading = readAloud.key,
                                 // The voice chat and dictation have the speaker and the microphone.
                                 canReadAloud = !voiceOn && !dictation.active,
+                                running = state.running,
                             )
                         }
                     } else Box(Modifier.fillMaxSize().padding(bottom = dockInset)) {
@@ -1301,6 +1302,8 @@ private fun Messages(
     reading: String? = null,
     /** Replies offer Read aloud. */
     canReadAloud: Boolean = true,
+    /** Whether a turn is running right now. */
+    running: Boolean = false,
 ) {
     var confirm by remember { mutableStateOf<Pair<MessageChange, String>?>(null) }
     val lastPrompt = messages.lastOrNull { it is ChatMessage.User }?.key
@@ -1363,7 +1366,7 @@ private fun Messages(
     val tail = messages.lastOrNull()?.let { it.key to it.contentSize() }
     var seenTail by remember { mutableStateOf(tail) }
     LaunchedEffect(awayFromBottom, tail) { if (!awayFromBottom) seenTail = tail }
-    val newBelow = awayFromBottom && tail != seenTail && !state.running
+    val newBelow = awayFromBottom && tail != seenTail && !running
     // Where the messages that came since the chat was last read begin. It stays put for the rest of this visit,
     // so reading on doesn't move or remove it under the reader; the next visit starts from the new last look.
     // Older pages load first while every loaded message is still new.
