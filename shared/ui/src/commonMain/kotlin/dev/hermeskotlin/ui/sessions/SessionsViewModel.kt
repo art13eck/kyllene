@@ -202,8 +202,7 @@ class SessionsViewModel(
     fun markSeen(session: SessionSummary) {
         val (url, profile) = bound.value ?: return
         viewModelScope.launch { seenStore.markSeen(url, session, profile) }
-        // Best effort: a failed write leaves the gateway's flag, which this phone's last look already outranks.
-        if (session.unread) viewModelScope.launch { api.setUnread(url, session.id, unread = false, profile = profile) }
+        viewModelScope.launch { api.setUnread(url, session.id, unread = false, profile = profile) }
     }
 
     private val _user = MutableStateFlow<AuthUser?>(null)

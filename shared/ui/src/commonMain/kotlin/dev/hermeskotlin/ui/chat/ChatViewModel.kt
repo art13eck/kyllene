@@ -450,6 +450,7 @@ class ChatViewModel(
         // The machinery's rows (deliveries, routines) count too: they move the chat's activity on as well.
         val newest = state.messages.mapNotNull { it.sentAt ?: (it as? ChatMessage.Event)?.timestamp }.maxOrNull() ?: return
         viewModelScope.launch { seen?.markLooked(target.gateway.gatewayUrl, id, newest, target.profile, running = state.running) }
+        viewModelScope.launch { sessions.setUnread(target.gateway.gatewayUrl, id, unread = false, profile = target.profile) }
     }
 
     /** Opens [target]'s chat in the host, with the transcript's file callbacks bound to that target. */

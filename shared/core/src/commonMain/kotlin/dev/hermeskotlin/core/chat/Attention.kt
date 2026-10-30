@@ -123,7 +123,13 @@ class AttentionTracker(
                 // The gateway was asked after this event and doesn't list the session: it isn't live, so idle.
                 else if (storedId !in live.statuses) put(storedId, false)
             }
-            open?.storedSessionId?.let { put(it, open.running) }
+            open?.storedSessionId?.let { id ->
+                if (open.running) {
+                    put(id, true)
+                } else if (id !in live.statuses || live.statuses[id]?.running != true) {
+                    put(id, false)
+                }
+            }
         }
     }.stateIn(scope, SharingStarted.WhileSubscribed(), emptyMap())
 

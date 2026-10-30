@@ -141,11 +141,17 @@ class ActiveSessions(
     }
 
     private fun parse(result: JsonElement): Map<String, LiveSession> =
-        ((result as? JsonObject)?.get("sessions") as? JsonArray).orEmpty().mapNotNull { row ->
-            val obj = runCatching { row.jsonObject }.getOrNull() ?: return@mapNotNull null
-            val key = obj.string("session_key")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val runtimeId = obj.string("id")?.takeIf { it.isNotBlank() } ?: key
-            key to LiveSession(runtimeId, LiveStatus.parse(obj.string("status")), obj.string("title").orEmpty())
+        ((result as? JsonObject)?.get("sessions") as? JsonArray).orEmpty().flatMap { row ->
+            val obj = runCatching { row.jsonObject }.getOrNull() ?: return@flatMap emptyList()
+            val rawKey = obj.string("session_key")?.takeIf { it.isNotBlank() } ?: obj.string("id")?.takeIf { it.isNotBlank() } ?: return@flatMap emptyList()
+            val runtimeId = obj.string("id")?.takeIf { it.isNotBlank() } ?: rawKey
+            val item = LiveSession(runtimeId, LiveStatus.parse(obj.string("status")), obj.string("title").orEmpty())
+            val cleanKey = if (rawKey.startsWith("agent:") && ":" in rawKey) rawKey.substringAfterLast(':') else rawKey
+            if (cleanKey != rawKey) {
+                listOf(rawKey to item, cleanKey to item)
+            } else {
+                listOf(rawKey to item)
+            }
         }.toMap()
 
     private companion object {
